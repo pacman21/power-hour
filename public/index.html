@@ -1,8 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Example of the Implicit Grant flow with Spotify</title>
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <title>Login with your Spotify Account</title>
     <style type="text/css">
       #login, #loggedin {
         display: none;
@@ -19,7 +18,7 @@
   <body>
     <div class="container">
       <div id="login">
-        <h1>This is an example of the Implicit Grant flow</h1>
+        <h1>Login To Your Spotify Account</h1>
         <button id="login-button" class="btn btn-primary">Log in with Spotify</button>
       </div>
       <div id="loggedin">
@@ -137,8 +136,8 @@
 
           document.getElementById('login-button').addEventListener('click', function() {
 
-            var client_id = '[enter-client-id]'; // Your client id
-            var redirect_uri = 'http://localhost:8888/callback.html'; // Your redirect uri
+            var client_id = '[client-id]';
+            var redirect_uri = 'http://localhost:8888/callback.html';
 
             var state = generateRandomString(16);
 
