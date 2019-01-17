@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Spotify Web Playback SDK Quick Start Tutorial</title>
+</head>
+<body>
+    <h1 style='text-align: center'>Spotify Powerhour</h1>
+    <br><br>
+    <h1 id="songName" style="text-align: center"></h1>
+    <h2 id="songArtists" style="text-align: center"></h2>
+    <br><br>
+    <div style="text-align: center">Seconds until next drink: <span id='secondCounter'></span></div>
+    <div style="text-align: center">You are on drink <span id='song'></span> of 60</div>
+
+  <script src="https://sdk.scdn.co/spotify-player.js"></script>
+  <script>
+    var url = window.location.toString();
+    var access_token = url.match(/\#(?:access_token)\=([\S\s]*?)\&/);
+
+    if(access_token != null){
+        window.onSpotifyWebPlaybackSDKReady = () => {
+            const token = access_token[1];
+            console.log(token);
+            const player = new Spotify.Player({
+                name: 'Web Playback SDK Quick Start Player',
+                    getOAuthToken: cb => { cb(token); }
+            });
+
+            // Error handling
+            player.addListener('initialization_error', ({ message }) => { console.error(message); });
+            player.addListener('authentication_error', ({ message }) => { console.error(message); });
+            player.addListener('account_error', ({ message }) => { console.error(message); });
+            player.addListener('playback_error', ({ message }) => { console.error(message); });
+
+            // Playback status updates
+            player.addListener('player_state_changed', ({
+                position,
+                duration,
+                track_window: { current_track }
+            }) => {
+                console.log('here');
+                startPowerHour();
+                document.getElementById("songName").innerHTML = current_track.name;
+
+                var artists = [];
+
+                for(var i = 0; i < current_track.artists.length; i++){
+                    artists.push(current_track.artists[i].name);
+                }
+
+                document.getElementById("songArtists").innerHTML = artists.toString();
+
+                console.log('Currently Playing', current_track);
+                console.log('Position in Song', position);
+                console.log('Duration of Song', duration);
+            });
+
+            // Ready
+            player.addListener('ready', ({ device_id }) => {
+            
+            });
+
+            // Not Ready
+            player.addListener('not_ready', ({ device_id }) => {
+                console.log('Device ID has gone offline', device_id);
+            });
+
+            // Connect to the player!
+            player.connect();
+
+            var started = false;
+
+            function startPowerHour(){
+                if(started == false){
+                    console.log('here');
+                    var counter = 0;
+                    var songCounter = 1;
+                    document.getElementById("song").innerHTML = songCounter;
+                    
+                    player.togglePlay().then(() => {
+                        player.seek(60 * 1000).then(() => {
+                            console.log('Changed position!');
+                        });
+                    });
+                
+                    setInterval(function() {
+                        if(counter == 60){
+                            counter = 0;
+                            player.nextTrack().then(() => {
+                                console.log("skipped to next track");
+                                player.seek(60 * 1000).then(() => {
+                                    console.log('Changed position!');
+                                });
+                            });
+                            songCounter++;
+                            document.getElementById("song").innerHTML = songCounter;
+                        }
+                        document.getElementById("secondCounter").innerHTML = 60 - counter;
+                        counter++;
+                    }, 1000);
+                }
+                started = true;
+            }
+        };
+    }
+  </script>
+</body>
+</html>
