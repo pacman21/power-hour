@@ -1,7 +1,7 @@
 # Power Hour
 Power hour that interacts with the Spotify API to play music through your open Spotify instance
 
-======
+----------
 
 ## How To Use
 1. You must get your own Client Id from the Spotify Developer portal by going to https://developer.spotify.com/dashboard/. Create your client and you'll be good to go.
