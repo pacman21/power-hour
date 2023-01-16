@@ -17,7 +17,6 @@
 
   <body>
     <div class="container">
-      <input type="text" id="client-id" hint="Enter Client Id" />
       <div id="login">
         <h1>Login To Your Spotify Account</h1>
         <button id="login-button" class="btn btn-primary">Log in with Spotify</button>
@@ -137,8 +136,8 @@
 
           document.getElementById('login-button').addEventListener('click', function() {
 
-            var client_id = document.getElementById("client-id").value;
-            var redirect_uri = 'http://localhost:8888/callback.html';
+            var client_id = '83900aeb269a4059bb53a09c553d1476';
+            var redirect_uri = 'https://pacman21.github.io/power-hour/callback.html';
 
             var state = generateRandomString(16);
 
