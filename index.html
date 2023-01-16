@@ -137,7 +137,7 @@
 
           document.getElementById('login-button').addEventListener('click', function() {
 
-            var client_id = document.getElementById("client-id").val();
+            var client_id = document.getElementById("client-id").value;
             var redirect_uri = 'http://localhost:8888/callback.html';
 
             var state = generateRandomString(16);
