@@ -135,9 +135,10 @@
           }
 
           document.getElementById('login-button').addEventListener('click', function() {
-
+            var getUrl = window.location;
+            var baseUrl = getUrl .protocol + "//" + getUrl.host + "/"
             var client_id = '83900aeb269a4059bb53a09c553d1476';
-            var redirect_uri = 'https://pacman21.github.io/power-hour/callback.html';
+            var redirect_uri = baseUrl + 'callback.html';
 
             var state = generateRandomString(16);
 

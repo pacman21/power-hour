@@ -5,9 +5,11 @@
 </head>
 <body>
     <h1 style='text-align: center'>Spotify Powerhour</h1>
-    <br><br>
     <h1 id="songName" style="text-align: center"></h1>
     <h2 id="songArtists" style="text-align: center"></h2>
+    <div style="text-align: center">
+        <img id="songAlbum" src="#" />
+    </div>
     <br><br>
     <div style="text-align: center">Seconds until next drink: <span id='secondCounter'></span></div>
     <div style="text-align: center">You are on drink <span id='song'></span> of 60</div>
@@ -16,13 +18,17 @@
   <script>
     var url = window.location.toString();
     var access_token = url.match(/\#(?:access_token)\=([\S\s]*?)\&/);
+    var counter = 0;
+
+    function getSeconds() {
+        return new Date().getTime() / 1000;
+    }
 
     if(access_token != null){
         window.onSpotifyWebPlaybackSDKReady = () => {
             const token = access_token[1];
-            console.log(token);
             const player = new Spotify.Player({
-                name: 'Web Playback SDK Quick Start Player',
+                name: 'Powerhour!',
                     getOAuthToken: cb => { cb(token); }
             });
 
@@ -38,7 +44,25 @@
                 duration,
                 track_window: { current_track }
             }) => {
-                console.log('here');
+                console.log('Currently Playing', current_track);
+
+                try {
+                    var url = current_track.album.images[0].url;
+                    document.getElementById("songAlbum").setAttribute("src", url);
+                } catch {
+                    console.log('no album found');
+                }
+
+                if(position < 60000) {
+                    player.seek(60 * 1000).then(() => {
+                        console.log('Changed position!');
+                        counter = 0;
+                        time = getSeconds();
+                    }, (err) => {
+                        console.log('error', err);
+                    });
+                }
+
                 startPowerHour();
                 document.getElementById("songName").innerHTML = current_track.name;
 
@@ -49,15 +73,11 @@
                 }
 
                 document.getElementById("songArtists").innerHTML = artists.toString();
-
-                console.log('Currently Playing', current_track);
-                console.log('Position in Song', position);
-                console.log('Duration of Song', duration);
             });
 
             // Ready
             player.addListener('ready', ({ device_id }) => {
-            
+                console.log('is ready');
             });
 
             // Not Ready
@@ -69,12 +89,13 @@
             player.connect();
 
             var started = false;
+            var time = getSeconds();
 
             function startPowerHour(){
                 if(started == false){
-                    console.log('here');
-                    var counter = 0;
                     var songCounter = 1;
+                    time = getSeconds();
+                    
                     document.getElementById("song").innerHTML = songCounter;
                     
                     player.togglePlay().then(() => {
@@ -82,15 +103,17 @@
                             console.log('Changed position!');
                         });
                     });
-                
+                    
                     setInterval(function() {
-                        if(counter == 60){
-                            counter = 0;
+                        var newTime = getSeconds();
+                        var timeDiff = newTime - time;
+
+                        if(counter >= 60 && timeDiff >= 60) {
                             player.nextTrack().then(() => {
+                                counter = 0;
                                 console.log("skipped to next track");
-                                player.seek(60 * 1000).then(() => {
-                                    console.log('Changed position!');
-                                });
+                            }, (err) => {
+                                console.log('err', err);
                             });
                             songCounter++;
                             document.getElementById("song").innerHTML = songCounter;
