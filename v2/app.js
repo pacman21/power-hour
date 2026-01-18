@@ -93,10 +93,18 @@ async function handleRedirect() {
   });
 
   const data = await res.json();
-  accessToken = data.access_token;
-  refreshToken = data.refresh_token;
 
-  localStorage.setItem("spotify_tokens", JSON.stringify(data));
+  const expiresAt = Date.now() + data.expires_in * 1000;
+  const tokenData = {
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+    expires_at: expiresAt
+  };
+
+  accessToken = tokenData.access_token;
+  refreshToken = tokenData.refresh_token;
+
+  localStorage.setItem("spotify_tokens", JSON.stringify(tokenData));
   window.history.replaceState({}, document.title, "/");
 
   onAuthenticated();
@@ -113,6 +121,57 @@ if (stored) {
   accessToken = data.access_token;
   refreshToken = data.refresh_token;
   onAuthenticated();
+  scheduleTokenRefresh();
+}
+
+/***********************
+ * REFRESH TOKEN LOGIC
+ ***********************/
+async function refreshAccessToken() {
+  if (!refreshToken) return;
+
+  const res = await fetch("https://accounts.spotify.com/api/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: clientId,
+      grant_type: "refresh_token",
+      refresh_token: refreshToken
+    })
+  });
+
+  const data = await res.json();
+
+  if (data.access_token) {
+    accessToken = data.access_token;
+    const expiresAt = Date.now() + data.expires_in * 1000;
+
+    const tokenData = {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      expires_at: expiresAt
+    };
+
+    localStorage.setItem("spotify_tokens", JSON.stringify(tokenData));
+    console.log("🔄 Access token refreshed");
+
+    scheduleTokenRefresh();
+  } else {
+    console.error("Failed to refresh token", data);
+  }
+}
+
+function scheduleTokenRefresh() {
+  const stored = JSON.parse(localStorage.getItem("spotify_tokens"));
+  if (!stored?.expires_at) return;
+
+  const refreshIn = stored.expires_at - Date.now() - 60 * 1000; // refresh 1 min early
+
+  if (refreshIn <= 0) {
+    refreshAccessToken();
+  } else {
+    setTimeout(refreshAccessToken, refreshIn);
+  }
 }
 
 /***********************
@@ -123,6 +182,7 @@ async function onAuthenticated() {
   document.getElementById("play").disabled = false;
   document.getElementById("pause").disabled = false;
   await loadPlaylists();
+  scheduleTokenRefresh();
 }
 
 /***********************
@@ -152,9 +212,7 @@ async function loadPlaylists() {
   playlists = [];
 
   while (url) {
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    });
+    const res = await spotifyFetch(url);
     const data = await res.json();
     playlists.push(...data.items);
     url = data.next;
@@ -176,9 +234,7 @@ async function loadTracks(playlistId) {
   tracks = [];
 
   while (url) {
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    });
+    const res = await spotifyFetch(url);
     const data = await res.json();
 
     tracks.push(
@@ -247,14 +303,11 @@ async function playNext() {
   countdown = 60;
   isPaused = false;
 
-  await fetch(
+  await spotifyFetch(
     `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`,
     {
       method: "PUT",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         uris: [track.uri],
         position_ms: 60000
@@ -299,3 +352,24 @@ document.getElementById("pause").onclick = async () => {
     document.getElementById("pause").innerText = "Pause";
   }
 };
+
+/***********************
+ * HELPER: FETCH WITH AUTO REFRESH
+ ***********************/
+async function spotifyFetch(url, options = {}) {
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      Authorization: `Bearer ${accessToken}`
+    }
+  });
+
+  if (res.status === 401) {
+    console.log("401 detected, refreshing token...");
+    await refreshAccessToken();
+    return spotifyFetch(url, options);
+  }
+
+  return res;
+}
