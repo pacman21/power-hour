@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Spotify 60s Player (PKCE)</title>
+</head>
+<body>
+
+<h1>Spotify 60s Playlist Player</h1>
+
+<button id="login">Login with Spotify</button>
+
+<div id="playlist-container" style="display:none;">
+  <label for="playlists">Choose playlist:</label>
+  <select id="playlists"></select>
+</div>
+
+<br />
+
+<button id="play" disabled>Play Playlist</button>
+<button id="pause" disabled>Pause</button>
+
+<hr />
+
+<div style="text-align: center">
+    <h2>Now Playing</h2>
+
+    <img id="album-art" src="" width="200" style="display:none; margin: 0 auto;" />
+
+    <p>
+    <strong>Song:</strong> <span id="song-name">—</span><br />
+    <strong>Artist:</strong> <span id="artist-name">—</span>
+    </p>
+
+    <hr />
+
+    <p>
+    Song #: <span id="counter">0</span><br />
+    Time left: <span id="timer">60</span>s
+    </p>
+</div>
+
+<script src="https://sdk.scdn.co/spotify-player.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
