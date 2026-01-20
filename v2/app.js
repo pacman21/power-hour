@@ -24,7 +24,7 @@ let playlists = [];
 let tracks = [];
 let currentIndex = 0;
 
-let countdown = 60;
+let countdown = 61;
 let countdownInterval;
 let advanceTimeout;
 let isPaused = false;
@@ -300,7 +300,7 @@ async function playNext() {
 
   document.getElementById("counter").innerText = currentIndex + 1;
 
-  countdown = 60;
+  countdown = 61;
   isPaused = false;
 
   await spotifyFetch(
